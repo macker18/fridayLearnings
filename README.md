@@ -1,2 +1,3 @@
-# Mac Allen Test Repo
-<strong>This is a test repository for learning and working through introductory git.</strong>
+# Mac Friday Learnings
+<strong>This is a repo for holding the individual learning files presented on Fridays with
+Emergence Labs</strong>
