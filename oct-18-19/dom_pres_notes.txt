@@ -1,0 +1,378 @@
+Quick precursor on what is abstraction
+explained by writing a simple abstraction of a function over another function
+
+
+
+
+Navigator
+Window
+Document
+
+https://developer.mozilla.org/en-US/docs/Web/API/Navigator
+https://developer.mozilla.org/en-US/docs/Web/API/Window
+
+The document is the actual webpage and its represented by the DOM
+
+
+DOM = Document Object Model
+
+Document = our webpage
+Object = javascript objects
+Model  = a representation of a structure (think a model train is just a small as representation of a train)
+
+so it's our _Document_ _Model_led as _Objects_
+
+or ...  our webpage represented as javascript objects
+
+this exists because nothing can exist in the JS world if it isn't an object
+
+Anything that exposes objects to us in Javascript is an API
+
+API = programming interface
+ = a way for your program to interact with some other program
+
+The DOM is an API for working with HTML documents
+It exposes JS objects to us that == the HTML document
+
+An example of interacting with a webpage using JS:
+`````
+document.getElementById('someDumbId');
+`````
+That's _written_ using JS, but it _uses_ the DOM API - that document
+object whose getElementById method is being called is given to us by
+the DOM.
+
+Try writing that in Node vs. in the browser console
+(this can take us down a runtime/interpreter rabbit hole which we want to avoid)
+
+
+So the objects that the DOM API exposes to us come with
+ - properties
+ - methods
+ - and events (next week)
+ for manipulating/creating pieces of our webpage
+
+ When functionality/information is organized into objects
+  you're working with a core tenant of object-oriented programming
+  = encapsulation
+
+
+So we know the DOM is a series of some JS objects that describe the
+webpage and allow us to get information about it or change it, etc
+
+But 'a series of objects' implies they're all just floating out there
+in the global scope available for us and we can access an object
+that represents a paragraph element by going `p` - we cannot.
+
+Webpages are structured. They have a hierarchy to them. For our
+representation of the webpage as javascript objects to actually
+reflect the webpage, it needs to also reflect that hierarchy.
+
+Enter the Tree data structure.
+// tree data structure image -> html representation
+
+Trees are made up of Nodes - basically just jargon for a
+single unit that has the ability to contain other single units. So a Node
+is just a single object that has a property that can hold other DOM Objects.
+
+Node = {
+  children: [];
+}
+
+But we need to be able to give it things to contain so:
+
+Node = {
+  children: []
+  appendchild: function(node){
+    this.children.push(node);
+  }
+}
+
+But with that representation nodes are just vessels for containing
+other nodes. What about attributes? Like ids or classes?
+
+
+Enter a more specific type of Node - `HTMLELement` - thats designed
+to represent that type of information for us:
+
+HTMLELement = {
+  //same as Node
+  children: []
+  appendchild: function(node){
+    this.children.push(node);
+  }
+
+  //specific to HTMLELement
+  class: null;
+  id: null;
+}
+
+Okay so now we have a node-like thing that has some extra info that
+we need, but what about more specific elements like our button that has
+that disabled attribute?
+
+Enter a more specific type of `HTMLElement` - `HTMLButtonElement`
+
+HTMLButtonElement = {
+  //same as Node
+  children: []
+  appendchild: function(node){
+    this.children.push(node);
+  }
+
+  //same as HTMLELement
+  class: null;
+  id: null;
+
+  //specific to HTMLButtonElement
+  disabled = false;
+}
+
+
+Okay so now we can represent more specific elements but our nodes, and our HTMLELements, and our Buttons
+never have any 'text' or 'values'.
+
+Obviously there's text on the screen and shown in our HTML so where's that from?
+
+Enter another (different) more specific type of Node - `TextNode` -
+which is designed to just hold a string
+
+TextNode = {
+  string: '';
+}
+
+But I thought Nodes had to be able to contain other Nodes?
+TextNodes are only able to be used as the final Node in the
+branch of a tree
+
+
+---- OOP, Inheritance, Prototypes ----
+
+
+If we look back at all those different types of Nodes we just
+made as they get more specific we're writing out a fair amount
+of properties, what if we miss one? That seems really fragile.
+
+Enter 'classes'. A class is any construct that can continually
+create a new Object and decorate it with properties and methods.
+
+What's a construct (thing) that we know exists in Javascript that
+lets us repeatedly do the same thing whenever we want?
+
+Functions.
+
+So lets create a function for creating a Node:
+
+function Node(){
+  return {
+    children: []
+    appendchild: function(node){
+      this.children.push(node);
+    }
+}
+
+and one for creating an HTMLELement:
+
+function HTMLELement = function(){
+  return {
+    //same as Node
+    children: []
+    appendchild: function(node){
+      this.children.push(node);
+    }
+
+    //specific to HTMLELement
+    class: null;
+    id: null;
+
+    }
+}
+
+Well hold on, this is great for ensuring we can easily create these
+specific types of objects whenever we need them but there's a lot
+of repeated properties between HTMLElements and Nodes. What if
+we wanted to give them more shared properties, we would have to
+write it in both places. Well it's repeated functionality so lets
+move it out into a function:
+
+function makeNodeLike(obj){
+  obj.children = []
+  obj.appendchild = function(node){
+    obj.children.push(node);
+  }
+}
+
+and refactor our HTMLELement function to use the new decorator function:
+
+function HTMLELement = function(){
+  var obj = {};
+  makeNodeLike(obj);
+  obj.class = null;
+  obj.id = null;
+  return obj;
+}
+
+That's nice but now we have this makeNodeLike function in the global scope
+and what if it gets overwritten, and it's not `tied` to our Node at all
+
+What if we had a way for our HTMLElement to just ask it's more generic version
+(a Node) for those properties if the HTMLElement gets asked for them by something else
+
+So if something were to ask our HTMLELement for children (HTMLELement.children) it
+would see that it doesnt have it but it could ask Node if it has it.
+
+Enter Inheritance (prototypes (a feature of the JS language)).
+
+When any object gets asked for a property that it personally doesn't have
+it will ask it's prototype if it has that property, and if it does, it will
+give it to the caller as if nothing ever happened.
+
+//more to come here
+
+native object prototypes
+
+
+
+
+
+
+
+
+
+a 'node' simply represents a single object in the document.
+
+So if a Node is characterized by it's ability to contain other Nodes
+how would we ever get to anything of value?
+
+
+
+
+https://software.hixie.ch/utilities/js/live-dom-viewer/
+
+The core DOM defines the objects that fundamentally describe a document and the objects within it.
+This is expanded upon as needed by other APIs that add new features and capabilities to the DOM.
+For example, the HTML DOM API adds support for representing HTML documents to the core DOM.
+the HTML specification significantly enhances it to add information specific to using the DOM
+ in the context of a web browser, as well as to using it to represent HTML documents specifically
+
+But as far as we're concerned HTML DOM === DOM
+
+a.k.a an in-memory representation of a webpage
+a.k.a a Javascript Object representation of a webpage
+
+### The DOM represents an HTML document in memory ###
+HTML Document === Webpage
+
+
+
+It's a programming interface for HTML documents
+?comment on programming interface = API = different definition than used to?
+
+
+Properties, methods, and events for manipulating/creating webpages are organized into objects (welcome to object-oriented programming)
+
+
+`````
+document.getElementById('someDumbId');
+`````
+That's _written_ using JS, but it _uses_ the DOM API -
+
+
+So the DOM is an in-memory description of a document (webpage). Webpages exist in the DOM
+as an instance of the `Document` interface.
+?what is an interface? an interface is just a strict definition of the ways you can interact with something
+
+Nodes are just empty vessels though. There are more-specific version of Nodes, known as Elements.
+
+
+
+A document consists of a hierarchical tree of 'nodes'.
+a 'node' simply represents a single object in the document.
+
+nodes are based on the `Node` interface
+
+Represented as a tree
+?what is a tree?
+Each branch ends in a node
+?what is a node?
+Each node contains an object
+
+
+Node --> Document
+Node --> Element --> HTMLElement --> HTLMTableElement --> ...
+NodeList
+Attribute
+
+
+
+
+
+The Document interface represents any web page loaded in the browser and serves as an entry point into the web page's content, which is the DOM tree.
+It provides functionality globally to the document, like how to obtain the page's URL and create new elements in the document.
+
+
+
+
+
+
+EventTarget --> Node
+
+Nodes can also have event handlers attached to them, when the event is triggered, the 'handler' (read: function) gets executed (read: called)
+?what is an event?
+
+
+
+
+
+# RUNTIMES
+V8
+=== INTERPRETER?
+
+
+
+
+
+
+
+
+
+
+
+
+
+//live vs static collections
+//h1.classList.add('hello')
+//attributes vs. properties
+
+//appendchild, removeChild, ParentNode.insertBefore
+//.closest()
+
+//if aliasing querySelector|All you must bind
+
+//HTMLElement.insertAdjacentHTML(locationStr, HTMLstr)
+  //beforebegin': before the element
+  //'afterbegin': inside the element before its first child
+  //'beforeend': inside the element after its last child
+  //'afterend': after the element
+
+//HTMLElement.insertAdjacentElement(locationStr, domNode)
+  //if referencing an attached element it just gets moved
+//HTMLELement.insertAdjacentText(locationStr, txt)
+
+//HTMLElement.replaceWith(otherElement)
+  //also moves otherElement if attached
+
+//HTMLElement.remove()
+
+
+//new DOMParser (must create an instance of it)
+//DOMParser.parseFromString(HTMLstr, 'text/html')
+//and it returns an entire DOM??? outr
+
+
+//element.matches(selector) = t/f
+//parentElement.contains(domNode) = t/f
+
+
+
+There's an 'enum' like situation for DOM Node types - 1 = ELEMENT_NODE, 3 = TEXT_NODE (there is no 2)
